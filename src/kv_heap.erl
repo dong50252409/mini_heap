@@ -5,72 +5,72 @@
 
 -export_type([kv_heap/0]).
 
--type kv_heap() :: {NextIndex :: non_neg_integer(), HeapMap :: map()}.
+-type kv_heap() :: HeapMap :: #{Index :: non_neg_integer() => {Key :: term(), Value :: term()}}.
 
 %%------------------------------------------------------------------------------
 %% @doc 创建一个最小堆
 %%------------------------------------------------------------------------------
 -spec new() -> kv_heap().
 new() ->
-    {1, #{}}.
+    #{}.
 
 %%------------------------------------------------------------------------------
 %% @doc 添加一个key，value到最小堆中
 %%------------------------------------------------------------------------------
 -spec insert(Key :: term(), Value :: term(), MiniHeap :: kv_heap()) -> NewMiniHeap :: kv_heap().
-insert(Key, Value, {Index, HeapMap}) ->
+insert(Key, Value, MiniHeap) ->
     KV = {Key, Value},
-    HeapMap1 = HeapMap#{Index => KV},
-    HeapMap2 = raise_kv(Index, KV, HeapMap1),
-    {Index + 1, HeapMap2}.
+    Index = maps:size(MiniHeap) + 1,
+    HeapMap1 = MiniHeap#{Index => KV},
+    raise_kv(Index, KV, HeapMap1).
 
-raise_kv(Index, {K, _} = KV, HeapMap) ->
+raise_kv(Index, {K, _} = KV, MiniHeap) ->
     ParentIndex = Index div 2,
-    case HeapMap of
+    case MiniHeap of
         #{ParentIndex := {PKey, _} = PKV} when PKey > K ->
-            HeapMap1 = HeapMap#{ParentIndex := KV, Index := PKV},
+            HeapMap1 = MiniHeap#{ParentIndex := KV, Index := PKV},
             raise_kv(ParentIndex, KV, HeapMap1);
-        HeapMap ->
-            HeapMap
+        MiniHeap ->
+            MiniHeap
     end.
 
 %%------------------------------------------------------------------------------
 %% @doc 取出堆顶的值
 %%------------------------------------------------------------------------------
 -spec take_value(MiniHeap :: kv_heap()) -> {Value :: term(), NewMiniHeap :: kv_heap()} | empty.
-take_value({NextIndex, #{1 := {_, Value}} = HeapMap}) ->
-    case NextIndex - 1 of
+take_value(#{1 := {_, Value}} = MiniHeap) ->
+    case maps:size(MiniHeap) of
         1 ->
-            {Value, {1, #{}}};
+            {Value, #{}};
         TailIndex ->
-            {TailKV, HeapMap1} = maps:take(TailIndex, HeapMap),
+            {TailKV, HeapMap1} = maps:take(TailIndex, MiniHeap),
             HeapMap2 = HeapMap1#{1 := TailKV},
             HeapMap3 = decline_kv(1, TailKV, HeapMap2),
-            {Value, {NextIndex - 1, HeapMap3}}
+            {Value, HeapMap3}
     end;
-take_value({1, HeapMap}) when map_size(HeapMap) =:= 0 ->
+take_value(HeapMap) when map_size(HeapMap) =:= 0 ->
     empty.
 
-decline_kv(Index, KV, HeapMap) ->
+decline_kv(Index, KV, MiniHeap) ->
     LeftIndex = Index * 2,
     RightIndex = Index * 2 + 1,
-    case HeapMap of
+    case MiniHeap of
         #{LeftIndex := {LK, _} = LeftKV, RightIndex := {RK, _}} when LK < RK ->
-            HeapMap1 = HeapMap#{Index := LeftKV, LeftIndex := KV},
+            HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
             decline_kv(LeftIndex, KV, HeapMap1);
         #{LeftIndex := {LK, _}, RightIndex := {RK, _} = RightKV} when LK > RK ->
-            HeapMap1 = HeapMap#{Index := RightKV, RightIndex := KV},
+            HeapMap1 = MiniHeap#{Index := RightKV, RightIndex := KV},
             decline_kv(RightIndex, KV, HeapMap1);
         _ ->
-            HeapMap
+            MiniHeap
     end.
 
 %%------------------------------------------------------------------------------
 %% @doc 获取堆的大小
 %%------------------------------------------------------------------------------
 -spec size(MiniHeap :: kv_heap()) -> Size :: non_neg_integer().
-size({NextIndex, _HeapMap}) ->
-    NextIndex - 1.
+size(MiniHeap) ->
+    maps:size(MiniHeap).
 
 %%------------------------------------------------------------------------------
 %% @doc 通过列表创建最小堆

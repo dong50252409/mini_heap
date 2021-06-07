@@ -5,50 +5,46 @@
 simple_test() ->
     new(),
     ElemSize = 33,
-    MimiHeap = from_list(ElemSize),
-    MimiHeap1 = take_elem(MimiHeap),
-    MimiHeap2 = add_element(MimiHeap1),
-    take_all(ElemSize, MimiHeap2).
+    MiniHeap = from_list(ElemSize),
+    MiniHeap1 = take_elem(MiniHeap),
+    MiniHeap2 = add_element(MiniHeap1),
+    size(ElemSize, MiniHeap2),
+    take_all(ElemSize, MiniHeap2).
 
 new() ->
     MiniHeap = elem_heap:new(),
-    assert_mini_heap(MiniHeap).
+    ?assert(is_map(MiniHeap)).
 
 
 from_list(ElemSize) ->
-    MimiHeap = elem_heap:from_list(lists:seq(ElemSize, 1, -1)),
-    assert_mini_heap(MimiHeap),
-    MimiHeap.
+    MiniHeap = elem_heap:from_list(lists:seq(ElemSize, 1, -1)),
+    ?assert(is_map(MiniHeap)),
+    MiniHeap.
 
-take_elem(MimiHeap) ->
-    ElemSize = maps:size(element(2, MimiHeap)),
-    {Elem, MimiHeap1} = elem_heap:take_element(MimiHeap),
+take_elem(MiniHeap) ->
+    {Elem, MiniHeap1} = elem_heap:take_element(MiniHeap),
     ?assert(Elem =:= 1),
-    assert_mini_heap(MimiHeap1),
-    ?assert(ElemSize - 1 =:= maps:size(element(2, MimiHeap1))),
-    MimiHeap1.
+    ?assert(is_map(MiniHeap1)),
+    ?assert(maps:size(MiniHeap) - 1 =:= maps:size(MiniHeap1)),
+    MiniHeap1.
 
-add_element(MimiHeap) ->
-    ElemSize = maps:size(element(2, MimiHeap)),
-    MimiHeap1 = elem_heap:add_element(1, MimiHeap),
-    assert_mini_heap(MimiHeap1),
-    ?assert(ElemSize + 1 =:= maps:size(element(2, MimiHeap1))),
-    MimiHeap1.
+add_element(MiniHeap) ->
+    MiniHeap1 = elem_heap:add_element(1, MiniHeap),
+    ?assert(is_map(MiniHeap1)),
+    ?assert(maps:size(MiniHeap) + 1 =:= maps:size(MiniHeap1)),
+    MiniHeap1.
 
-assert_mini_heap({NextIndex, HeapMap}) ->
-    ?assert(is_integer(NextIndex)),
-    ?assert(is_map(HeapMap)),
-    Size = map_size(HeapMap),
-    ?assert(Size + 1 =:= NextIndex).
+size(ElemSize, MiniHeap) ->
+    ?assert(ElemSize =:= elem_heap:size(MiniHeap)).
 
-take_all(ElemSize, MimiHeap) ->
-    ?assert(take_all_1(MimiHeap) =:= lists:seq(1, ElemSize)).
+take_all(ElemSize, MiniHeap) ->
+    ?assert(take_all_1(MiniHeap) =:= lists:seq(1, ElemSize)).
 
-take_all_1(MimiHeap) ->
-    case elem_heap:take_element(MimiHeap) of
-        {Value, MimiHeap1} ->
-%%            ?debugFmt("Value:~w MimiHeap:~w~n~n", [Value, MimiHeap1]),
-            [Value | take_all_1(MimiHeap1)];
+take_all_1(MiniHeap) ->
+    case elem_heap:take_element(MiniHeap) of
+        {Value, MiniHeap1} ->
+%%            ?debugFmt("Value:~w MiniHeap:~w~n~n", [Value, MiniHeap1]),
+            [Value | take_all_1(MiniHeap1)];
         empty ->
             []
     end.

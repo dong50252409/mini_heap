@@ -3,64 +3,64 @@
 -export([new/0, add_element/2, take_element/1, size/1, from_list/1]).
 
 -export_type([elem_heap/0]).
--type elem_heap() :: {NextIndex :: non_neg_integer(), HeapMap :: map()}.
+-type elem_heap() :: HeapMap :: #{Index :: non_neg_integer() => Elem :: term()}.
 
 %%------------------------------------------------------------------------------
 %% @doc 创建一个最小堆
 %%------------------------------------------------------------------------------
 -spec new() -> elem_heap().
 new() ->
-    {1, #{}}.
+    #{}.
 
 
 %%------------------------------------------------------------------------------
 %% @doc 添加一个元素到最小堆中
 %%------------------------------------------------------------------------------
 -spec add_element(Elem :: term(), MiniHeap :: elem_heap()) -> NewMiniHeap :: elem_heap().
-add_element(Elem, {Index, HeapMap}) ->
-    HeapMap1 = HeapMap#{Index => Elem},
-    HeapMap2 = raise_elem(Index, Elem, HeapMap1),
-    {Index + 1, HeapMap2}.
+add_element(Elem, MiniHeap) ->
+    Index = maps:size(MiniHeap) + 1,
+    HeapMap1 = MiniHeap#{Index => Elem},
+    raise_elem(Index, Elem, HeapMap1).
 
-raise_elem(Index, Elem, HeapMap) ->
+raise_elem(Index, Elem, MiniHeap) ->
     ParentIndex = Index div 2,
-    case HeapMap of
+    case MiniHeap of
         #{ParentIndex := ParentElem} when ParentElem > Elem ->
-            HeapMap1 = HeapMap#{ParentIndex := Elem, Index := ParentElem},
+            HeapMap1 = MiniHeap#{ParentIndex := Elem, Index := ParentElem},
             raise_elem(ParentIndex, Elem, HeapMap1);
-        HeapMap ->
-            HeapMap
+        MiniHeap ->
+            MiniHeap
     end.
 
 %%------------------------------------------------------------------------------
 %% @doc 取出堆顶的元素
 %%------------------------------------------------------------------------------
 -spec take_element(MiniHeap :: elem_heap()) -> {Elem :: term(), NewMiniHeap :: elem_heap()} | empty.
-take_element({NextIndex, #{1 := Elem} = HeapMap}) ->
-    case NextIndex - 1 of
+take_element(#{1 := Elem} = MiniHeap) ->
+    case maps:size(MiniHeap) of
         1 ->
-            {Elem, {1, #{}}};
+            {Elem, #{}};
         TailIndex ->
-            {TailElem, HeapMap1} = maps:take(TailIndex, HeapMap),
+            {TailElem, HeapMap1} = maps:take(TailIndex, MiniHeap),
             HeapMap2 = HeapMap1#{1 := TailElem},
             HeapMap3 = decline_elem(1, TailElem, HeapMap2),
-            {Elem, {TailIndex, HeapMap3}}
+            {Elem, HeapMap3}
     end;
-take_element({1, HeapMap}) when map_size(HeapMap) =:= 0 ->
+take_element(MiniHeap) when map_size(MiniHeap) =:= 0 ->
     empty.
 
-decline_elem(Index, Elem, HeapMap) ->
+decline_elem(Index, Elem, MiniHeap) ->
     LeftIndex = Index * 2,
     RightIndex = Index * 2 + 1,
-    case HeapMap of
+    case MiniHeap of
         #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem < RightElem ->
-            HeapMap1 = HeapMap#{Index := LeftElem, LeftIndex := Elem},
+            HeapMap1 = MiniHeap#{Index := LeftElem, LeftIndex := Elem},
             decline_elem(LeftIndex, Elem, HeapMap1);
         #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem > RightElem ->
-            HeapMap1 = HeapMap#{Index := RightElem, RightIndex := Elem},
+            HeapMap1 = MiniHeap#{Index := RightElem, RightIndex := Elem},
             decline_elem(RightIndex, Elem, HeapMap1);
         _ ->
-            HeapMap
+            MiniHeap
     end.
 
 
@@ -68,8 +68,8 @@ decline_elem(Index, Elem, HeapMap) ->
 %% @doc 获取堆的大小
 %%------------------------------------------------------------------------------
 -spec size(MiniHeap :: elem_heap()) -> Size :: non_neg_integer().
-size({NextIndex, _HeapMap}) ->
-    NextIndex - 1.
+size(MiniHeap) ->
+    maps:size(MiniHeap).
 
 %%------------------------------------------------------------------------------
 %% @doc 通过列表创建最小堆
