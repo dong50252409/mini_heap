@@ -12,7 +12,6 @@
 new() ->
     #{}.
 
-
 %%------------------------------------------------------------------------------
 %% @doc 添加一个元素到最小堆中
 %%------------------------------------------------------------------------------
@@ -23,7 +22,7 @@ add_element(Elem, MiniHeap) ->
     raise_elem(Index, Elem, HeapMap1).
 
 raise_elem(Index, Elem, MiniHeap) ->
-    ParentIndex = Index div 2,
+    ParentIndex = Index bsr 1,
     case MiniHeap of
         #{ParentIndex := ParentElem} when ParentElem > Elem ->
             HeapMap1 = MiniHeap#{ParentIndex := Elem, Index := ParentElem},
@@ -50,8 +49,8 @@ take_element(MiniHeap) when map_size(MiniHeap) =:= 0 ->
     empty.
 
 decline_elem(Index, Elem, MiniHeap) ->
-    LeftIndex = Index * 2,
-    RightIndex = Index * 2 + 1,
+    LeftIndex = Index bsl 2,
+    RightIndex = (Index bsl 2) + 1,
     case MiniHeap of
         #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem < RightElem ->
             HeapMap1 = MiniHeap#{Index := LeftElem, LeftIndex := Elem},
@@ -62,7 +61,6 @@ decline_elem(Index, Elem, MiniHeap) ->
         _ ->
             MiniHeap
     end.
-
 
 %%------------------------------------------------------------------------------
 %% @doc 获取堆的大小

@@ -25,7 +25,7 @@ insert(Key, Value, MiniHeap) ->
     raise_kv(Index, KV, HeapMap1).
 
 raise_kv(Index, {K, _} = KV, MiniHeap) ->
-    ParentIndex = Index div 2,
+    ParentIndex = Index bsr 1,
     case MiniHeap of
         #{ParentIndex := {PKey, _} = PKV} when PKey > K ->
             HeapMap1 = MiniHeap#{ParentIndex := KV, Index := PKV},
@@ -52,8 +52,8 @@ take_value(HeapMap) when map_size(HeapMap) =:= 0 ->
     empty.
 
 decline_kv(Index, KV, MiniHeap) ->
-    LeftIndex = Index * 2,
-    RightIndex = Index * 2 + 1,
+    LeftIndex = Index bsl 1,
+    RightIndex = (Index bsl 1) + 1,
     case MiniHeap of
         #{LeftIndex := {LK, _} = LeftKV, RightIndex := {RK, _}} when LK < RK ->
             HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
