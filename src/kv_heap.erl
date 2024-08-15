@@ -53,14 +53,17 @@ take_value(HeapMap) when map_size(HeapMap) =:= 0 ->
 
 decline_kv(Index, KV, MiniHeap) ->
     LeftIndex = Index bsl 1,
-    RightIndex = (Index bsl 1) + 1,
+    RightIndex = LeftIndex + 1,
     case MiniHeap of
-        #{LeftIndex := {LK, _} = LeftKV, RightIndex := {RK, _}} when LK < RK ->
+        #{LeftIndex := {LK, _} = LeftKV, RightIndex := {RK, _}} when LK < RK andalso element(1, KV) > LK ->
             HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
             decline_kv(LeftIndex, KV, HeapMap1);
-        #{LeftIndex := {LK, _}, RightIndex := {RK, _} = RightKV} when LK > RK ->
+        #{LeftIndex := {LK, _}, RightIndex := {RK, _} = RightKV} when LK > RK andalso element(1, KV) > RK ->
             HeapMap1 = MiniHeap#{Index := RightKV, RightIndex := KV},
             decline_kv(RightIndex, KV, HeapMap1);
+        #{LeftIndex := {LK, _} = LeftKV} when element(1, KV) > LK ->
+            HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
+            decline_kv(LeftIndex, KV, HeapMap1);
         _ ->
             MiniHeap
     end.

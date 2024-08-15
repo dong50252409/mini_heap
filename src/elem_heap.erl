@@ -49,15 +49,18 @@ take_element(MiniHeap) when map_size(MiniHeap) =:= 0 ->
     empty.
 
 decline_elem(Index, Elem, MiniHeap) ->
-    LeftIndex = Index bsl 2,
-    RightIndex = (Index bsl 2) + 1,
+    LeftIndex = Index bsl 1,
+    RightIndex = LeftIndex + 1,
     case MiniHeap of
-        #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem < RightElem ->
+        #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem < RightElem andalso Elem > LeftElem ->
             HeapMap1 = MiniHeap#{Index := LeftElem, LeftIndex := Elem},
             decline_elem(LeftIndex, Elem, HeapMap1);
-        #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem > RightElem ->
+        #{LeftIndex := LeftElem, RightIndex := RightElem} when LeftElem > RightElem andalso Elem > RightElem ->
             HeapMap1 = MiniHeap#{Index := RightElem, RightIndex := Elem},
             decline_elem(RightIndex, Elem, HeapMap1);
+        #{LeftIndex := LeftElem} when Elem > LeftElem ->
+            HeapMap1 = MiniHeap#{Index := LeftElem, LeftIndex := Elem},
+            decline_elem(LeftIndex, Elem, HeapMap1);
         _ ->
             MiniHeap
     end.
