@@ -17,33 +17,33 @@ new() ->
 %%------------------------------------------------------------------------------
 %% @doc 添加一个key，value到最小堆中
 %%------------------------------------------------------------------------------
--spec insert(Key :: term(), Value :: term(), MiniHeap :: kv_heap()) -> NewMiniHeap :: kv_heap().
-insert(Key, Value, MiniHeap) ->
+-spec insert(Key :: term(), Value :: term(), MinHeap :: kv_heap()) -> NewMinHeap :: kv_heap().
+insert(Key, Value, MinHeap) ->
     KV = {Key, Value},
-    Index = maps:size(MiniHeap) + 1,
-    HeapMap1 = MiniHeap#{Index => KV},
+    Index = maps:size(MinHeap) + 1,
+    HeapMap1 = MinHeap#{Index => KV},
     raise_kv(Index, KV, HeapMap1).
 
-raise_kv(Index, {K, _} = KV, MiniHeap) ->
+raise_kv(Index, {K, _} = KV, MinHeap) ->
     ParentIndex = Index bsr 1,
-    case MiniHeap of
+    case MinHeap of
         #{ParentIndex := {PKey, _} = PKV} when PKey > K ->
-            HeapMap1 = MiniHeap#{ParentIndex := KV, Index := PKV},
+            HeapMap1 = MinHeap#{ParentIndex := KV, Index := PKV},
             raise_kv(ParentIndex, KV, HeapMap1);
-        MiniHeap ->
-            MiniHeap
+        MinHeap ->
+            MinHeap
     end.
 
 %%------------------------------------------------------------------------------
 %% @doc 取出堆顶的值
 %%------------------------------------------------------------------------------
--spec take_value(MiniHeap :: kv_heap()) -> {Value :: term(), NewMiniHeap :: kv_heap()} | empty.
-take_value(#{1 := {_, Value}} = MiniHeap) ->
-    case maps:size(MiniHeap) of
+-spec take_value(MinHeap :: kv_heap()) -> {Value :: term(), NewMinHeap :: kv_heap()} | empty.
+take_value(#{1 := {_, Value}} = MinHeap) ->
+    case maps:size(MinHeap) of
         1 ->
             {Value, #{}};
         TailIndex ->
-            {TailKV, HeapMap1} = maps:take(TailIndex, MiniHeap),
+            {TailKV, HeapMap1} = maps:take(TailIndex, MinHeap),
             HeapMap2 = HeapMap1#{1 := TailKV},
             HeapMap3 = decline_kv(1, TailKV, HeapMap2),
             {Value, HeapMap3}
@@ -51,38 +51,38 @@ take_value(#{1 := {_, Value}} = MiniHeap) ->
 take_value(HeapMap) when map_size(HeapMap) =:= 0 ->
     empty.
 
-decline_kv(Index, KV, MiniHeap) ->
+decline_kv(Index, KV, MinHeap) ->
     LeftIndex = Index bsl 1,
     RightIndex = LeftIndex + 1,
-    case MiniHeap of
+    case MinHeap of
         #{LeftIndex := {LK, _} = LeftKV, RightIndex := {RK, _}} when LK < RK andalso element(1, KV) > LK ->
-            HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
+            HeapMap1 = MinHeap#{Index := LeftKV, LeftIndex := KV},
             decline_kv(LeftIndex, KV, HeapMap1);
         #{LeftIndex := {LK, _}, RightIndex := {RK, _} = RightKV} when LK > RK andalso element(1, KV) > RK ->
-            HeapMap1 = MiniHeap#{Index := RightKV, RightIndex := KV},
+            HeapMap1 = MinHeap#{Index := RightKV, RightIndex := KV},
             decline_kv(RightIndex, KV, HeapMap1);
         #{LeftIndex := {LK, _} = LeftKV} when element(1, KV) > LK ->
-            HeapMap1 = MiniHeap#{Index := LeftKV, LeftIndex := KV},
+            HeapMap1 = MinHeap#{Index := LeftKV, LeftIndex := KV},
             decline_kv(LeftIndex, KV, HeapMap1);
         _ ->
-            MiniHeap
+            MinHeap
     end.
 
 %%------------------------------------------------------------------------------
 %% @doc 获取堆的大小
 %%------------------------------------------------------------------------------
--spec size(MiniHeap :: kv_heap()) -> Size :: non_neg_integer().
-size(MiniHeap) ->
-    maps:size(MiniHeap).
+-spec size(MinHeap :: kv_heap()) -> Size :: non_neg_integer().
+size(MinHeap) ->
+    maps:size(MinHeap).
 
 %%------------------------------------------------------------------------------
 %% @doc 通过列表创建最小堆
 %%------------------------------------------------------------------------------
--spec from_list(L :: [{K :: term(), V :: term()}]) -> MiniHeap :: kv_heap().
+-spec from_list(L :: [{K :: term(), V :: term()}]) -> MinHeap :: kv_heap().
 from_list(L) ->
     from_list_1(L, new()).
 
-from_list_1([{K, V} | T], MiniHeap) ->
-    from_list_1(T, insert(K, V, MiniHeap));
-from_list_1([], MiniHeap) ->
-    MiniHeap.
+from_list_1([{K, V} | T], MinHeap) ->
+    from_list_1(T, insert(K, V, MinHeap));
+from_list_1([], MinHeap) ->
+    MinHeap.
